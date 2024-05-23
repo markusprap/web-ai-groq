@@ -1,34 +1,78 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { requestToGroqAI} from './utils/groq'
+import {Light as SyntaxHiglight} from 'react-syntax-highlighter'
+import {darcula} from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function LoadingSpinner() {
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="spinner">
+      <div className="double-bounce1"></div>
+      <div className="double-bounce2"></div>
+    </div>
+  )
+}
+
+function App() {
+  const [data, setData] = useState("")
+  const [displayData, setDisplayData] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    
+    // Reset displayData and data
+    setDisplayData("");
+    setData("");
+    
+    const ai = await requestToGroqAI(content.value)
+    setData(ai);
+    setLoading(false);
+  
+    // Check if ai is not undefined
+    if (ai) {
+      // Start typing animation
+      let i = 0-1;
+      const interval = setInterval(() => {
+        if (i < ai.length) {
+          setDisplayData(prev => prev + ai[i]);
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 10);
+    }
+  }
+
+  return(
+    <main className='flex flex-col min-h-[80vh] justify-center items-center max-w-xl w-full mx-auto'>
+      <h1 className='text-4xl text-indigo-500 mb-4'>Welcome to Markus's AI Project</h1>
+      <form action='submit' className='flex flex-col gap-4 py-4 w-full'>
+        <input
+         className='py-2 px-4 text-md rounded-md' 
+         placeholder='Ketik permintaan disini'
+         id='content'
+         type='text'
+        />
+        <button
+          onClick={handleSubmit}
+          type='submit'
+          className='bg-indigo-500 py-2 px-4 font-bold text-white rounded-md'
+        >
+          {loading ? <LoadingSpinner /> : "Submit"}
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      </form>
+      <div className='max-w-xl w-full mx-auto'>
+        {data ? (
+          <SyntaxHiglight language='swift' style={darcula} wrapLongLines={true}>
+            {displayData.toString()}
+          </SyntaxHiglight>
+        ) : null}
+        
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      
+    </main>
   )
 }
 
